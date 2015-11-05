@@ -1,0 +1,15 @@
+@()(implicit request: play.api.mvc.RequestHeader)
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Title</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+    </head>
+    <body>
+        @playscalajs.html.scripts("client")
+        <div id="app"></div>
+    </body>
+</html>
