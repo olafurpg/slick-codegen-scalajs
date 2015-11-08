@@ -2,9 +2,10 @@ package is.launaskil.models
 
 /** Entity class storing rows of table AppUserTable
  *  @param id Database column id SqlType(serial), AutoInc, PrimaryKey
+ *  @param createdAt Database column created_at SqlType(timestamp), Default(None)
  *  @param username Database column username SqlType(varchar), Length(256,true), Default(None)
  *  @param profiles Database column profiles SqlType(_text), Length(2147483647,false) */
-case class AppUserRow(id: Int, username: Option[String] = None, profiles: List[String])
+case class AppUserRow(id: Int, createdAt: Option[is.launaskil.models.Timestamp] = None, username: Option[String] = None, profiles: List[String])
 
 
 
@@ -21,8 +22,8 @@ case class AppUserRow(id: Int, username: Option[String] = None, profiles: List[S
  *  @param installedOn Database column installed_on SqlType(timestamp)
  *  @param executionTime Database column execution_time SqlType(int4)
  *  @param success Database column success SqlType(bool) */
-case class SchemaVersionRow(versionRank: Int, installedRank: Int, version: String, description: String, `type`: String, script: String, checksum: Option[Int] = None, installedBy: String, installedOn: Epoch, executionTime: Int, success: Boolean)
+case class SchemaVersionRow(versionRank: Int, installedRank: Int, version: String, description: String, `type`: String, script: String, checksum: Option[Int] = None, installedBy: String, installedOn: is.launaskil.models.Timestamp, executionTime: Int, success: Boolean)
 
 
 
-          
+

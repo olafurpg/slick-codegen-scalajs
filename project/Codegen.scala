@@ -16,7 +16,7 @@ trait OnlyTables extends HasColMap { this: SourceCodeGenerator =>
 package ${pkg}
 // AUTO-GENERATED Slick data model. DO NOT CHANGE.
 trait ${container} extends DriverExtensions {
-  lazy val profile = com.github.olafurpg.slick.PostgresDriver
+  lazy val profile = is.launaskil.slick.Driver
   import profile.api._
   ${indent(code)}
 }
@@ -62,7 +62,7 @@ trait OnlyClasses extends HasColMap { this: SourceCodeGenerator =>
 
 trait PostgresColMap extends HasColMap {
   override val colMap: PartialFunction[m.Column, String] = {
-    case col if col.tpe == "java.sql.Timestamp" => "Epoch"
+    case col if col.tpe == "java.sql.Timestamp" => "is.launaskil.models.Timestamp"
     case col if col.tpe == "String" =>
       col.options.find(_.isInstanceOf[ColumnOption.SqlType])
         .map(_.asInstanceOf[ColumnOption.SqlType].typeName).map({
@@ -88,7 +88,6 @@ class ServerCodegen(model: m.Model) extends BaseCodegen(model)
 }
 
 object Codegen {
-
   lazy val sharedCodegen = (model: m.Model) => new SharedCodegen(model)
   lazy val serverCodegen = (model: m.Model) => new ServerCodegen(model)
 }

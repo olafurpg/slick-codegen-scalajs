@@ -22,8 +22,9 @@ object Main extends JSApp {
 
   @JSExport
   override def main(): Unit = {
-    RPC[BasicApi].helloLaunaskil("Hello").call().map { msg =>
-      ReactDOM.render(HelloLaunaskil(msg), document.getElementById("app"))
+    RPC[BasicApi].gimmeUsers().call().map { msg =>
+      println(msg)
+      ReactDOM.render(HelloLaunaskil(msg.toString()), document.getElementById("app"))
     }
   }
 

@@ -1,7 +1,7 @@
 package is.launaskil.models
 // AUTO-GENERATED Slick data model. DO NOT CHANGE.
 trait Tables extends DriverExtensions {
-  lazy val profile = com.github.olafurpg.slick.PostgresDriver
+  lazy val profile = is.launaskil.slick.Driver
   import profile.api._
   import slick.model.ForeignKeyAction
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
@@ -14,18 +14,20 @@ trait Tables extends DriverExtensions {
 
 
   /** GetResult implicit for fetching AppUserRow objects using plain SQL queries */
-  implicit def GetResultAppUserRow(implicit e0: GR[Int], e1: GR[Option[String]], e2: GR[List[String]]): GR[AppUserRow] = GR{
+  implicit def GetResultAppUserRow(implicit e0: GR[Int], e1: GR[Option[is.launaskil.models.Timestamp]], e2: GR[Option[String]], e3: GR[List[String]]): GR[AppUserRow] = GR{
     prs => import prs._
-    AppUserRow.tupled((<<[Int], <<?[String], <<[List[String]]))
+    AppUserRow.tupled((<<[Int], <<?[is.launaskil.models.Timestamp], <<?[String], <<[List[String]]))
   }
   /** Table description of table app_user. Objects of this class serve as prototypes for rows in queries. */
   class AppUserTable(_tableTag: Tag) extends Table[AppUserRow](_tableTag, "app_user") {
-    def * = (id, username, profiles) <> (AppUserRow.tupled, AppUserRow.unapply)
+    def * = (id, createdAt, username, profiles) <> (AppUserRow.tupled, AppUserRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), username, Rep.Some(profiles)).shaped.<>({r=>import r._; _1.map(_=> AppUserRow.tupled((_1.get, _2, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), createdAt, username, Rep.Some(profiles)).shaped.<>({r=>import r._; _1.map(_=> AppUserRow.tupled((_1.get, _2, _3, _4.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
+    /** Database column created_at SqlType(timestamp), Default(None) */
+    val createdAt: Rep[Option[is.launaskil.models.Timestamp]] = column[Option[is.launaskil.models.Timestamp]]("created_at", O.Default(None))
     /** Database column username SqlType(varchar), Length(256,true), Default(None) */
     val username: Rep[Option[String]] = column[Option[String]]("username", O.Length(256,varying=true), O.Default(None))
     /** Database column profiles SqlType(_text), Length(2147483647,false) */
@@ -36,9 +38,9 @@ trait Tables extends DriverExtensions {
 
 
   /** GetResult implicit for fetching SchemaVersionRow objects using plain SQL queries */
-  implicit def GetResultSchemaVersionRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[Int]], e3: GR[Epoch], e4: GR[Boolean]): GR[SchemaVersionRow] = GR{
+  implicit def GetResultSchemaVersionRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[Int]], e3: GR[is.launaskil.models.Timestamp], e4: GR[Boolean]): GR[SchemaVersionRow] = GR{
     prs => import prs._
-    SchemaVersionRow.tupled((<<[Int], <<[Int], <<[String], <<[String], <<[String], <<[String], <<?[Int], <<[String], <<[Epoch], <<[Int], <<[Boolean]))
+    SchemaVersionRow.tupled((<<[Int], <<[Int], <<[String], <<[String], <<[String], <<[String], <<?[Int], <<[String], <<[is.launaskil.models.Timestamp], <<[Int], <<[Boolean]))
   }
   /** Table description of table schema_version. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: type */
@@ -65,7 +67,7 @@ trait Tables extends DriverExtensions {
     /** Database column installed_by SqlType(varchar), Length(100,true) */
     val installedBy: Rep[String] = column[String]("installed_by", O.Length(100,varying=true))
     /** Database column installed_on SqlType(timestamp) */
-    val installedOn: Rep[Epoch] = column[Epoch]("installed_on")
+    val installedOn: Rep[is.launaskil.models.Timestamp] = column[is.launaskil.models.Timestamp]("installed_on")
     /** Database column execution_time SqlType(int4) */
     val executionTime: Rep[Int] = column[Int]("execution_time")
     /** Database column success SqlType(bool) */

@@ -1,6 +1,7 @@
 import sbt.Project.projectToRef
 import slick.codegen.SourceCodeGenerator
 import slick.{ model => m }
+import Codegen._
 
 
 lazy val clients = Seq(client)
@@ -22,22 +23,23 @@ lazy val customScalacOptions = Seq(
   "-Ywarn-numeric-widen" // Warn when numerics are widened.
 )
 
-lazy val databaseUrl = sys.env.getOrElse("DB_DEFAULT_URL", ???)
-lazy val databaseUser = sys.env.getOrElse("DB_DEFAULT_USER", ???)
-lazy val databasePassword = sys.env.getOrElse("DB_DEFAULT_PASSWORD", ???)
+lazy val databaseUrl = sys.env.getOrElse("DB_DEFAULT_URL", "MISSING URL")
+lazy val databaseUser = sys.env.getOrElse("DB_DEFAULT_USER", "MISSING USER")
+lazy val databasePassword = sys.env.getOrElse("DB_DEFAULT_PASSWORD", "MISSING PASSWORD")
 lazy val updateDb = taskKey[Seq[File]]("Runs flyway and Slick code codegeneration.")
 lazy val clearScreenTask = TaskKey[Unit]("clear", "Clears the screen.")
 
-def commonSettings: Project => Project =
-    _.settings(
-      organization       := "is.launaskil",
-      version            := "0.0.1-SNAPSHOT",
-      homepage           := Some(url("https://launaskil.is")),
-      scalaVersion       := Scala211,
-      scalacOptions     ++= customScalacOptions,
-      updateOptions      := updateOptions.value.withCachedResolution(true),
-      testFrameworks += new TestFramework("utest.runner.Framework"),
-      clearScreenTask    := { println("\033[2J\033[;H") })
+lazy val commonSettings: Seq[sbt.Def.Setting[_]] =
+      Seq(
+        organization       := "is.launaskil",
+        version            := "0.0.1-SNAPSHOT",
+        homepage           := Some(url("https://launaskil.is")),
+        scalaVersion       := Scala211,
+        scalacOptions     ++= customScalacOptions,
+        updateOptions      := updateOptions.value.withCachedResolution(true),
+        testFrameworks += new TestFramework("utest.runner.Framework"),
+        clearScreenTask    := { println("\033[2J\033[;H") }
+      )
 
 def hasDatabaseCodegen: Project => Project =
   _.settings(slickCodegenSettings:_*)
@@ -61,23 +63,44 @@ def addCommandAliases(m: (String, String)*) = {
 }
 
 lazy val root = project.in(file("."))
-  .configure(commonSettings, addCommandAliases(
+  .settings(commonSettings:_*)
+  .configure(addCommandAliases(
+  "p"  -> "; slickDriver/publishLocal ",
+  "r"  -> "reload",
   "C"  -> "root/clean",
   "t"  -> ";clear;  test:compile ; server/test ; client/test",
   "tt" -> ";clear; +server:compile ;+server/test",
-  "cg" -> ";clear; reload ; serverCodegen/slickCodegen ; sharedCodegen/slickCodegen",
+  "cg" -> ";clear; reload ; flyway/flywayClean ; flyway/flywayMigrate ; serverCodegen/slickCodegen ; sharedCodegen/slickCodegen",
   "T"  -> "; clean ;t",
   "TT" -> ";+clean ;tt"))
 
+lazy val slickDriver = (project in file("slick-driver"))
+  .settings(commonSettings:_*)
+  .settings(
+  version := "0.1.0-SNAPSHOT",
+  name := "slick-driver",
+  libraryDependencies ++= Seq(
+    "com.typesafe.slick" %% "slick" % slickV
+    , "com.github.tminglei" %% "slick-pg" % "0.10.0"
+    , "org.postgresql" % "postgresql" % "9.4-1201-jdbc41"
+  )
+)
+
+
+// Most important part, define a separate project for each codegen.
+// These projects won't contain any code, but are needed to compile the
+// project. Ideally, this should be possible with a single project but I
+// couldn't get that to work.
 lazy val serverCodegen = (project in file("serverCodegen"))
-  .configure(commonSettings, hasDatabaseCodegen)
+  .settings(commonSettings:_*)
+  .configure(hasDatabaseCodegen)
   .settings(
     slickCodegenCodeGenerator := Codegen.serverCodegen,
     slickCodegenOutputDir := file("server/app")
   )
 
 lazy val sharedCodegen = (project in file("sharedCodegen"))
-  .configure(commonSettings)
+  .settings(commonSettings:_*)
   .configure(hasDatabaseCodegen)
   .settings(
     slickCodegenCodeGenerator := Codegen.sharedCodegen,
@@ -86,7 +109,7 @@ lazy val sharedCodegen = (project in file("sharedCodegen"))
 
 
 lazy val flyway = (project in file("flyway"))
-  .configure(commonSettings)
+  .settings(commonSettings:_*)
   .settings(flywaySettings:_*)
   .settings(
     flywayUrl := databaseUrl,
@@ -102,7 +125,7 @@ lazy val flyway = (project in file("flyway"))
   )
 
 lazy val client = (project in file("client"))
-  .configure(commonSettings)
+  .settings(commonSettings:_*)
   .settings(
   scalaVersion := scalaV,
   persistLauncher := true,
@@ -123,7 +146,7 @@ lazy val client = (project in file("client"))
   dependsOn(sharedJs)
 
 lazy val server = (project in file("server"))
-  .configure(commonSettings)
+  .settings(commonSettings:_*)
   .settings(
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd)
@@ -133,7 +156,7 @@ lazy val server = (project in file("server"))
     scalacOptions ++= customScalacOptions,
     libraryDependencies ++= Seq(
       jdbc
-      , "com.github.olafurpg" %% "postgres-driver" % "0.1.2-SNAPSHOT"
+      , "is.launaskil" %% "slick-driver" % "0.1.0-SNAPSHOT"
       , "com.lihaoyi" %% "autowire" % "0.2.5"
       , "com.lihaoyi" %% "utest" % "0.3.1"
       , "com.mohiva" %% "play-silhouette" % "3.0.4"
@@ -147,14 +170,15 @@ lazy val server = (project in file("server"))
   .aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJvm)
 
-
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "upickle" % "0.3.6"
+      "com.lihaoyi" %%% "upickle" % "0.3.6",
+      "is.launaskil" %%% "time" % "0.1.0-SNAPSHOT"
     )
   )
+  .dependsOn(time)
   .jsConfigure(_ enablePlugins ScalaJSPlay)
 
 lazy val sharedJvm = shared.jvm
